@@ -3,31 +3,52 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from .models import playlist_user
 from django.urls.base import reverse
-from django.contrib.auth import authenticate,login,logout
+from django.contrib.auth import authenticate, login as auth_login, logout 
 from youtube_search import YoutubeSearch
+from django.contrib.auth.decorators import login_required
 import json
 # import cardupdate
 
+
+def login_view(request):
+  if request.method == 'POST':
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        auth_login(request, user)
+        return redirect('default')
+    else:
+        return render(request, 'login.html', {'case': False})
+  return render(request, 'login.html')
+
+def signup(request):
+  return render(request, 'signup.html')
+
+def logout_view(request):
+  logout(request)
+  return redirect('login')
 
 
 f = open('card.json', 'r')
 CONTAINER = json.load(f)
 
 def default(request):
-    global CONTAINER
+  if not request.user.is_authenticated:
+    return redirect('login')
 
+  global CONTAINER
+  if request.method == 'POST':
+    add_playlist(request)
+    return HttpResponse("")
 
-    if request.method == 'POST':
-
-        add_playlist(request)
-        return HttpResponse("")
-
-    song = 'kSFJGEHDCrQ'
-    return render(request, 'player.html',{'CONTAINER':CONTAINER, 'song':song})
-
+  song = 'kSFJGEHDCrQ'
+  return render(request, 'player.html',{'CONTAINER':CONTAINER, 'song':song})
 
 
 def playlist(request):
+    if not request.user.is_authenticated:
+      return redirect('login')
     cur_user = playlist_user.objects.get(username = request.user)
     try:
       song = request.GET.get('song')
@@ -58,8 +79,6 @@ def search(request):
     return redirect('/')
 
   return render(request, 'search.html', {'CONTAINER': song_li, 'song':song_li[0][0]['id']})
-
-
 
 
 def add_playlist(request):
