@@ -23,6 +23,25 @@ def login_view(request):
   return render(request, 'login.html')
 
 def signup(request):
+  if request.method == 'POST':
+    username = request.POST['username']
+    email = request.POST['email']
+    password = request.POST['password']
+    confirm_password = request.POST['confirm-password']
+
+    if password != confirm_password:
+      return render(request, 'signup.html', {'error': 'Passwords do not match'})
+
+    if User.objects.filter(username=username).exists():
+      return render(request, 'signup.html', {'error': 'Username already exists'})
+
+    if User.objects.filter(email=email).exists():
+      return render(request, 'signup.html', {'error': 'Email already exists'})
+
+    user = User.objects.create_user(username, email, password)
+    user.save()
+    auth_login(request, user)
+    return redirect('default')
   return render(request, 'signup.html')
 
 def logout_view(request):
