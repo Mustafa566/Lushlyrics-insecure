@@ -2,10 +2,8 @@ from django.http.response import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from .models import playlist_user
-from django.urls.base import reverse
-from django.contrib.auth import authenticate, login as auth_login, logout 
+from django.contrib.auth import authenticate, login as auth_login, logout
 from youtube_search import YoutubeSearch
-from django.contrib.auth.decorators import login_required
 import json
 # import cardupdate
 
@@ -48,6 +46,9 @@ def logout_view(request):
   logout(request)
   return redirect('login')
 
+
+def password_reset(request):
+  return render(request, 'password_reset.html')
 
 f = open('card.json', 'r')
 CONTAINER = json.load(f)
